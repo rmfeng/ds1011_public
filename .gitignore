@@ -24,6 +24,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+**.idea/
 
 # Data Folders
 **/data/
@@ -74,6 +75,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+**.ipynb_checkpoints
 
 # pyenv
 .python-version
