@@ -7,6 +7,7 @@ from collections import Counter
 from sklearn.feature_extraction import stop_words
 from tqdm import tqdm_notebook as tqdm
 from tqdm import tnrange
+import logging
 
 tokenizer = spacy.load('en_core_web_sm')
 punctuations = string.punctuation
@@ -122,7 +123,8 @@ def process_text_dataset(dataset,
                          ngram_indexer=None,
                          remove_stopwords=True,
                          remove_punc=True,
-                         mode='spacy'):
+                         mode='spacy',
+                         val_size=0):
     """
     Top level function that encodes each datum into a list of ngram indices
     :param dataset: list of IMDBDatum
@@ -132,10 +134,11 @@ def process_text_dataset(dataset,
     :param remove_stopwords: bool to remove stopwords in the tokenizer
     :param remove_punc: bool to remove punctuation in the tokenizer
     :param mode: {'spacy', 'naive'}
+    :param val_size: size of validation so the indexer only gets created on non-validation data
     """
     ngram_counter = None
     # extract n-gram
-    print("extracting ngrams ...")
+    logging.info("extracting ngrams ...")
     for i in tnrange(len(dataset), desc='extract ngrams'):
         text_datum = dataset[i].raw_text
         ngrams, tokens = extract_ngram_from_text(text_datum, n, remove_stopwords, remove_punc, mode)
@@ -143,12 +146,13 @@ def process_text_dataset(dataset,
         dataset[i].set_tokens(tokens)
     # select top k ngram
     if ngram_indexer is None:
-        print("constructing ngram_indexer ...")
-        ngram_indexer, ngram_counter = construct_ngram_indexer([datum.ngram for datum in dataset], topk)
+        logging.info("constructing ngram_indexer ...")
+        logging.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
+        ngram_indexer, ngram_counter = construct_ngram_indexer([datum.ngram for datum in dataset][:-val_size], topk)
     else:
-        print("already have a passed ngram_indexer ...")
+        logging.info("already have a passed ngram_indexer ...")
     # vectorize each datum
-    print("setting each dataset's token indexes")
+    logging.info("setting each dataset's token indexes")
     for i in tnrange(len(dataset), desc='token to index'):
         dataset[i].set_token_idx(token_to_index(dataset[i].tokens, ngram_indexer))
     return dataset, ngram_indexer, ngram_counter

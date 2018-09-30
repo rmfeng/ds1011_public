@@ -6,8 +6,7 @@ from tqdm import tqdm_notebook as tqdm
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+import config_defaults as cd
 
 
 class IMDBDatum:
@@ -117,7 +116,7 @@ def imdb_collate_func(batch):
                             mode="constant", constant_values=0)
         data_list.append(padded_vec)
 
-    return [torch.from_numpy(np.array(data_list)).to(device),
-            torch.LongTensor(length_list).to(device),
-            torch.LongTensor(label_list).to(device)]
+    return [torch.from_numpy(np.array(data_list)).to(cd.DEVICE),
+            torch.LongTensor(length_list).to(cd.DEVICE),
+            torch.LongTensor(label_list).to(cd.DEVICE)]
 
