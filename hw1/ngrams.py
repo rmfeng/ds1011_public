@@ -117,6 +117,57 @@ def token_to_index(tokens, ngram_indexer):
     return [ngram_indexer[token] if token in ngram_indexer else UNK_IDX for token in tokens]
 
 
+def extract_ngrams(dataset,
+                   n,
+                   remove_stopwords=True,
+                   remove_punc=True,
+                   mode='spacy'):
+    """
+    extracts the ngrams for the dataset
+    :param dataset: list of IMDBDatum
+    :param n: n in "n-gram"
+    :param remove_stopwords: bool to remove stopwords in the tokenizer
+    :param remove_punc: bool to remove punctuation in the tokenizer
+    :param mode: {'spacy', 'naive'} 
+    :return: dataset with ngrams extracted
+    """
+    logging.info("extracting ngrams ...")
+    for i in tnrange(len(dataset), desc='extract ngrams'):
+        text_datum = dataset[i].raw_text
+        ngrams, tokens = extract_ngram_from_text(text_datum, n, remove_stopwords, remove_punc, mode)
+        dataset[i].set_ngram(ngrams)
+        dataset[i].set_tokens(tokens)
+    return dataset
+
+
+def create_ngram_indexer(dataset,
+                         topk=None,
+                         val_size=0):
+    """
+    from the dataset that has ngrams extracted, create the vocab indexer
+    :param dataset: ngrams already extracted
+    :param topk: vocab size
+    :param val_size: val_set size (to not use in the indexer)
+    :return:
+    """
+    logging.info("constructing ngram_indexer ...")
+    logging.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
+    return construct_ngram_indexer([datum.ngram for datum in dataset][:-val_size], topk)
+
+
+def process_dataset_ngrams(dataset, ngram_indexer):
+    """
+    processes the dataset that has ngrams already extracted
+    :param dataset: list of IMDBDatum, ngrams already extracted
+    :param ngram_indexer: a dictionary that maps ngram to an unique index
+    :return:
+    """
+    logging.info("setting each dataset's token indexes")
+    for i in tnrange(len(dataset), desc='token to index'):
+        dataset[i].set_token_idx(token_to_index(dataset[i].tokens, ngram_indexer))
+    return dataset
+
+
 def process_text_dataset(dataset,
                          n,
                          topk=None,
@@ -129,7 +180,7 @@ def process_text_dataset(dataset,
     Top level function that encodes each datum into a list of ngram indices
     :param dataset: list of IMDBDatum
     :param n: n in "n-gram"
-    :param topk: #
+    :param topk: # in vocab
     :param ngram_indexer: a dictionary that maps ngram to an unique index
     :param remove_stopwords: bool to remove stopwords in the tokenizer
     :param remove_punc: bool to remove punctuation in the tokenizer

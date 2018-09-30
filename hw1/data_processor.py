@@ -81,9 +81,10 @@ def read_file_as_datum(file_name, label):
 def construct_dataset(dataset_dir, dataset_size, offset=0):
     """
     Function that loads a dataset
-    @param offset: skip first offset items in this dir
-    @param dataset_dir:
-    @param dataset_size:
+    :param offset: skip first offset items in this dir
+    :param dataset_dir:
+    :param dataset_size:
+    :return: a list of IMDBDatum Objects
     """
     pos_dir = os.path.join(dataset_dir, "pos")
     neg_dir = os.path.join(dataset_dir, "neg")
