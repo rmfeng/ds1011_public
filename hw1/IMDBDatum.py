@@ -7,6 +7,8 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 class IMDBDatum:
     """
@@ -114,4 +116,8 @@ def imdb_collate_func(batch):
                             pad_width=(0, max_length - datum[1]),
                             mode="constant", constant_values=0)
         data_list.append(padded_vec)
-    return [torch.from_numpy(np.array(data_list)), torch.LongTensor(length_list), torch.LongTensor(label_list)]
+
+    return [torch.from_numpy(np.array(data_list)).to(device),
+            torch.LongTensor(length_list).to(device),
+            torch.LongTensor(label_list).to(device)]
+

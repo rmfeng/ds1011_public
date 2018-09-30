@@ -19,7 +19,7 @@ class BagOfWords(nn.Module):
         super(BagOfWords, self).__init__()
         # pay attention to padding_idx
         self.embed = nn.Embedding(vocab_size, emb_dim, padding_idx=0)
-        self.linear = nn.Linear(emb_dim, 20)
+        self.linear = nn.Linear(emb_dim, 2)
 
     def forward(self, data, length):
         """
