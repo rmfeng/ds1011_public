@@ -5,9 +5,13 @@ import spacy
 import string
 from collections import Counter
 from sklearn.feature_extraction import stop_words
-from tqdm import tqdm_notebook as tqdm
+from nltk.util import ngrams as nltk_ngrams
+# from tqdm import tqdm_notebook as tqdm
 from tqdm import tnrange
 import logging
+import config_defaults as cd
+cd.init_logger()
+logger = logging.getLogger('__main__')
 
 tokenizer = spacy.load('en_core_web_sm')
 punctuations = string.punctuation
@@ -58,9 +62,9 @@ def extract_ngram_from_text(text, n, remove_stopwords=True, remove_punc=True, mo
     """
     tokens = tokenize(text, remove_stopwords=remove_stopwords, remove_punc=remove_punc, mode=mode)
     all_ngrams = []
-    for i in range(0, len(tokens) - n):
-        for j in range(1, n + 1):
-            all_ngrams.append(get_n_gram_at_position_i(j, i, tokens))
+    for i in range(1, n+1):
+        cur_ngrams = nltk_ngrams(tokens, i)
+        all_ngrams += cur_ngrams
     ngram_counter = Counter(all_ngrams)
     return ngram_counter, all_ngrams
 
@@ -78,32 +82,16 @@ def construct_ngram_indexer(ngram_counter_list, topk):
     i = 2  # the index to start the rest of the tokens
     final_count = Counter()
 
-    for elem in tqdm(ngram_counter_list):
+    for elem in ngram_counter_list:
         for key, value in elem.items():
             final_count[key] += value
 
-    for key in tqdm(dict(final_count.most_common(topk))):
+    for key in dict(final_count.most_common(topk)):
         rt_dict[key] = i
         i += 1
 
+    logger.info("final vocal size: %s" % len(rt_dict))
     return rt_dict, final_count  # length topk + 2
-
-
-def get_n_gram_at_position_i(n, i, tokens):
-    """
-    provided a list of tokens, gets the ngram starting at position i (0 indexed)
-    :param n: ngram size
-    :param i: ith position
-    :param tokens: full list of tokens
-    :return: tuple representing ngram
-    """
-    out_list = []
-    if n == 1:
-        return tokens[i]
-    else:
-        for j in range(i, i + n):
-            out_list.append(tokens[j])
-    return tuple(out_list)
 
 
 def token_to_index(tokens, ngram_indexer):
@@ -131,8 +119,8 @@ def extract_ngrams(dataset,
     :param mode: {'spacy', 'naive'} 
     :return: dataset with ngrams extracted
     """
-    logging.info("extracting ngrams ...")
-    for i in tnrange(len(dataset), desc='extract ngrams'):
+    logger.info("extracting ngrams ...")
+    for i in tnrange(len(dataset), desc='NGRAMS'):
         text_datum = dataset[i].raw_text
         ngrams, tokens = extract_ngram_from_text(text_datum, n, remove_stopwords, remove_punc, mode)
         dataset[i].set_ngram(ngrams)
@@ -150,8 +138,8 @@ def create_ngram_indexer(dataset,
     :param val_size: val_set size (to not use in the indexer)
     :return:
     """
-    logging.info("constructing ngram_indexer ...")
-    logging.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
+    logger.info("constructing ngram_indexer ...")
+    logger.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
     return construct_ngram_indexer([datum.ngram for datum in dataset][:-val_size], topk)
 
 
@@ -162,8 +150,8 @@ def process_dataset_ngrams(dataset, ngram_indexer):
     :param ngram_indexer: a dictionary that maps ngram to an unique index
     :return:
     """
-    logging.info("setting each dataset's token indexes")
-    for i in tnrange(len(dataset), desc='token to index'):
+    logger.info("setting each dataset's token indexes")
+    for i in range(len(dataset)):
         dataset[i].set_token_idx(token_to_index(dataset[i].tokens, ngram_indexer))
     return dataset
 
@@ -189,22 +177,22 @@ def process_text_dataset(dataset,
     """
     ngram_counter = None
     # extract n-gram
-    logging.info("extracting ngrams ...")
-    for i in tnrange(len(dataset), desc='extract ngrams'):
+    logger.info("extracting ngrams ...")
+    for i in range(len(dataset)):
         text_datum = dataset[i].raw_text
         ngrams, tokens = extract_ngram_from_text(text_datum, n, remove_stopwords, remove_punc, mode)
         dataset[i].set_ngram(ngrams)
         dataset[i].set_tokens(tokens)
     # select top k ngram
     if ngram_indexer is None:
-        logging.info("constructing ngram_indexer ...")
-        logging.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
+        logger.info("constructing ngram_indexer ...")
+        logger.info("indexer length %s" % len([datum.ngram for datum in dataset][:-val_size]))
         ngram_indexer, ngram_counter = construct_ngram_indexer([datum.ngram for datum in dataset][:-val_size], topk)
     else:
-        logging.info("already have a passed ngram_indexer ...")
+        logger.info("already have a passed ngram_indexer ...")
     # vectorize each datum
-    logging.info("setting each dataset's token indexes")
-    for i in tnrange(len(dataset), desc='token to index'):
+    logger.info("setting each dataset's token indexes")
+    for i in range(len(dataset)):
         dataset[i].set_token_idx(token_to_index(dataset[i].tokens, ngram_indexer))
     return dataset, ngram_indexer, ngram_counter
 

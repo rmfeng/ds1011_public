@@ -25,7 +25,7 @@ VAL_FREQ = 4                    # check for early stop every n batches
 REMOVE_STOP_WORDS = True        # whether to remove stop words in the text
 REMOVE_PUNC = True              # whether to remove punctuation in the text
 EARLY_STOP = True               # whether or not the model considers early stopping
-EARLY_STOP_LOOKBACK = 2         # number of batches to look back when consider to early stop
+EARLY_STOP_LOOKBACK = 4         # number of batches to look back when consider to early stop
 EARLY_STOP_MIN_IMPROVE = 0.01   # minimum improvement required in early stop
 
 
@@ -36,11 +36,12 @@ TRAIN_AND_VAL_SIZE = 25000  # total data size 25k for both train/val and test
 TEST_SIZE = 25000           # total data size 25k for both train/val and test
 DIR_DATA = r'./data/aclImdb/'
 DIR_PICKLE = r'./data/pickles/'
-DIR_RES = r'./data/'
+DIR_RES = r'./results/'
 DIR_TRAIN = os.path.join(DIR_DATA, "train")
 DIR_TEST = os.path.join(DIR_DATA, "test")
 
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = 'cpu'
 
 DEFAULT_HPARAMS = {
     'LR': LR,
@@ -61,3 +62,4 @@ DEFAULT_HPARAMS = {
 }
 
 DATA_HPARAMS = ['NGRAM_SIZE', 'NGRAM_MODE', 'REMOVE_STOP_WORDS', 'REMOVE_PUNC']
+INDEXER_HPARAMS = ['NGRAM_SIZE', 'NGRAM_MODE', 'REMOVE_STOP_WORDS', 'REMOVE_PUNC', 'VOC_SIZE', 'VAL_SIZE']

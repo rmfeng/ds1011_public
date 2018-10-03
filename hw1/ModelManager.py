@@ -15,14 +15,15 @@ import BagOfWords as BoW
 import ngrams
 import pickle as pkl
 import time
-from tqdm import tnrange
-from tqdm import tqdm_notebook as tqdm
+# from tqdm import tnrange
+# from tqdm import tqdm_notebook as tqdm
 cd.init_logger()
+logger = logging.getLogger('__main__')
 
 
 class ModelManager:
     def __init__(self, hparams=None, save_pickles=True, load_pickles=True, res_name=None):
-        self.hparams = cd.DEFAULT_HPARAMS
+        self.hparams = cd.DEFAULT_HPARAMS.copy()
         if isinstance(hparams, dict):
             self.hparams.update(hparams)
         self.save_pickles = save_pickles
@@ -40,10 +41,10 @@ class ModelManager:
 
         assert self.hparams['VAL_SIZE'] < cd.TRAIN_AND_VAL_SIZE
 
-        logging.info("initialized model with hyperparametrs:")
+        logger.info("initialized model with hyperparametrs:")
         for key in self.hparams:
-            logging.info("%s: %s" % (key, self.hparams[key]))
-        logging.info("allow pickle loads: %s, allow pickle saves: %s" % (self.load_pickles, self.save_pickles))
+            logger.info("%s: %s" % (key, self.hparams[key]))
+        logger.info("allow pickle loads: %s, allow pickle saves: %s" % (self.load_pickles, self.save_pickles))
 
     def train(self, epoch_override=None, reload_data=True):
         if reload_data:
@@ -58,24 +59,25 @@ class ModelManager:
         does the hard work of loading and processing the data
         considers if we can load the data by comparing current hparams with hparams on the pickle files
         """
-        pickle_path_train_val = cd.DIR_PICKLE + 'trainval_' + hparam_to_str(self.hparams)
-        pickle_path_test = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams)
+        pickle_path_train_val = cd.DIR_PICKLE + 'trainval_' + hparam_to_str(self.hparams, cd.DATA_HPARAMS)
+        pickle_path_test = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams, cd.DATA_HPARAMS)
+        pickle_indexer = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams, cd.INDEXER_HPARAMS)
 
-        # first check if we can just load the pickles
+        """ --- DATA LOADING AND RECALC --- """
         if self.load_pickles and os.path.isfile(pickle_path_train_val) \
                 and os.path.isfile(pickle_path_test):
             # do load
-            logging.info("found pickle files in %s, loading them instead of rebuilding ... " % cd.DIR_PICKLE)
+            logger.info("found pickle files in %s, loading them instead of rebuilding ... " % cd.DIR_PICKLE)
             train_and_val_data = pkl.load(open(pickle_path_train_val, "rb"))
             test_data = pkl.load(open(pickle_path_test, "rb"))
         else:
-            logging.info("did not find pickle files in %s, rebuilding ..." % cd.DIR_PICKLE)
+            logger.info("did not find pickle files in %s, rebuilding ..." % cd.DIR_PICKLE)
 
-            logging.info("loading datasets ...")
+            logger.info("loading datasets ...")
             train_and_val_set = dp.construct_dataset(cd.DIR_TRAIN, cd.TRAIN_AND_VAL_SIZE)
             test_set = dp.construct_dataset(cd.DIR_TRAIN, cd.TEST_SIZE)
 
-            logging.info("extracting ngram from training and val set of size %s..." % cd.TRAIN_AND_VAL_SIZE)
+            logger.info("extracting ngram from training and val set of size %s..." % cd.TRAIN_AND_VAL_SIZE)
 
             train_and_val_data = ngrams.extract_ngrams(train_and_val_set,
                                                        self.hparams['NGRAM_SIZE'],
@@ -83,7 +85,7 @@ class ModelManager:
                                                        remove_punc=self.hparams['REMOVE_PUNC'],
                                                        mode=self.hparams['NGRAM_MODE'])
 
-            logging.info("extracting ngram from test set of size %s ..." % cd.TEST_SIZE)
+            logger.info("extracting ngram from test set of size %s ..." % cd.TEST_SIZE)
             test_data = ngrams.extract_ngrams(test_set,
                                               self.hparams['NGRAM_SIZE'],
                                               remove_stopwords=self.hparams['REMOVE_STOP_WORDS'],
@@ -92,14 +94,23 @@ class ModelManager:
 
             # only saves if we did not load the data
             if self.save_pickles:
-                logging.info("saving pickled data to folder %s ..." % cd.DIR_PICKLE)
+                logger.info("saving pickled data to folder %s ..." % cd.DIR_PICKLE)
                 pkl.dump(train_and_val_data, open(pickle_path_train_val, "wb"))
                 pkl.dump(test_data, open(pickle_path_test, "wb"))
 
-        # regardless of loading, need to do process the ngrams data=
-        train_ngram_indexer, ngram_counter = ngrams.create_ngram_indexer(train_and_val_data,
-                                                                         topk=self.hparams['VOC_SIZE'],
-                                                                         val_size=self.hparams['VAL_SIZE'])
+        """ --- INDEXER LOADING AND RECALC --- """
+        if self.load_pickles and os.path.isfile(pickle_indexer):
+            # load the indexer
+            train_ngram_indexer = pkl.load(open(pickle_indexer, "rb"))
+        else:
+            # need to do process the ngrams data=
+            train_ngram_indexer, _ = ngrams.create_ngram_indexer(train_and_val_data,
+                                                                 topk=self.hparams['VOC_SIZE'],
+                                                                 val_size=self.hparams['VAL_SIZE'])
+            if self.save_pickles:
+                logger.info("saving pickled indexer to folder %s ..." % cd.DIR_PICKLE)
+                pkl.dump(train_ngram_indexer, open(pickle_indexer, "wb"))
+
         train_and_val_data = ngrams.process_dataset_ngrams(train_and_val_data, train_ngram_indexer)
         test_data = ngrams.process_dataset_ngrams(test_data, train_ngram_indexer)
 
@@ -178,10 +189,11 @@ class ModelManager:
 
         stop_training = False
         total_iterated = 0
-        for epoch in tnrange(train_epochs, desc='Epochs'):
-            for i, (data, lengths, labels) in enumerate(tqdm(self.loaders['train'])):
+        for epoch in range(train_epochs):
+            for i, (data, lengths, labels) in enumerate(self.loaders['train']):
                 total_iterated += self.hparams['BATCH_SIZE']
                 self.model.train()  # good practice to set the model to training mode (dropout)
+
                 data_batch, length_batch, label_batch = data, lengths, labels
                 optimizer.zero_grad()
                 outputs = self.model(data_batch, length_batch)
@@ -191,7 +203,7 @@ class ModelManager:
                 # validate every 4 batches
                 if (i + 1) % (self.hparams['BATCH_SIZE'] * self.hparams['VAL_FREQ']) == 0:
                     val_acc = test_model(self.loaders['val'], self.model)
-                    logging.info('Epoch: [{}/{}], Step: [{}/{}], Validation Acc: {}'.format(
+                    logger.info('Epoch: [{}/{}], Step: [{}/{}], Validation Acc: {}'.format(
                         epoch + 1, self.hparams['NEPOCH'], i + 1, len(self.loaders['train']), val_acc))
 
                     self.validation_acc_history.append(val_acc)
@@ -201,7 +213,7 @@ class ModelManager:
                                                    self.hparams['EARLY_STOP_LOOKBACK'],
                                                    self.hparams['EARLY_STOP_MIN_IMPROVE'])
                 if stop_training:
-                    logging.info("--- earily stop triggered ---")
+                    logger.info("--- earily stop triggered ---")
                     break
             if stop_training:
                 break
@@ -222,9 +234,9 @@ class ModelManager:
     def test_model(self, loader=None):
         if loader is None:
             loader = self.loaders['test']
-            logging.critical("!!!! THIS IS THE FINAL TEST RESULT, DO NOT FURTHER OPTIMIZE !!!!")
+            logger.critical("!!!! THIS IS THE FINAL TEST RESULT, DO NOT FURTHER OPTIMIZE !!!!")
         if self.model is None:
-            logging.error("ERROR: cannot test model, was not initialized")
+            logger.error("ERROR: cannot test model, was not initialized")
         else:
             return test_model(loader, self.model)
         return -1
@@ -237,32 +249,37 @@ class ModelManager:
             res_path = cd.DIR_RES + 'res_df.p'
 
         if self.res_df is None and os.path.isfile(res_path):
-            logging.info("found historical file, loading the dataframe at %s" % res_path)
-            self.res_df = pkl.load(open(res_path, "rb"))
+            # history found
+            logger.info("found historical file, loading the dataframe at %s" % res_path)
+            df = pkl.load(open(res_path, "rb"))
+            df_cur = pd.DataFrame(self.cur_res, index=[df.shape[0] + 1])
+            self.res_df = pd.concat([df, df_cur])
         elif self.res_df is None:
-            logging.info("generating new pandas dataframe to store results")
+            # new res_df and not history found
+            logger.info("generating new pandas dataframe to store results")
             self.res_df = pd.DataFrame(self.cur_res, index=[1])
         else:
-            logging.info("appending new results to existing dataframe")
+            # res_df exists and hasn't been cleared
+            logger.info("appending new results to existing dataframe")
             df = pd.DataFrame(self.cur_res, index=[len(self.res_df) + 1])
             self.res_df = pd.concat([self.res_df, df])
 
-    def save_results(self, res_name=None):
-        if res_name is None:
+    def save_results(self):
+        if self.res_name is None:
             res_path = cd.DIR_RES + 'res_df.p'
         else:
-            res_path = cd.DIR_RES + res_name
+            res_path = cd.DIR_RES + self.res_name
         if self.res_df is None:
-            logging.error("no results table to save! self.res_df is empty")
+            logger.error("no results table to save! self.res_df is empty")
         else:
             pkl.dump(self.res_df, open(res_path, "wb"))
-            logging.info("results saved to %s" % res_path)
+            logger.info("results saved to %s" % res_path)
 
 
-def hparam_to_str(hparams):
+def hparam_to_str(hparams, req_params):
     final_str = ''
-    for key in hparams:
-        if key in cd.DATA_HPARAMS:
+    for key in sorted(hparams):
+        if key in req_params:
             final_str += str(hparams[key]).replace('.', 'p').replace(':', '-') + "_"
     return final_str[:-1] + '.p'
 
@@ -294,7 +311,7 @@ def early_stop(val_acc_history, t=2, required_progress=0.01):
     @param t: number of training steps
     @return: a boolean indicates if the model should earily stop
     """
-    if len(val_acc_history) > t + 1 and val_acc_history[-t - 1] > max(val_acc_history[-t:]) - required_progress:
+    if len(val_acc_history) >= t + 1 and val_acc_history[-t - 1] > max(val_acc_history[-t:]) - required_progress:
         return True
     return False
 

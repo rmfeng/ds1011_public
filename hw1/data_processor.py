@@ -2,11 +2,12 @@
 # reference https://github.com/nyu-mll/DS-GA-1011-Fall2017
 """
 import os
-from tqdm import tqdm_notebook as tqdm
+# from tqdm import tqdm_notebook as tqdm
 import torch
 from torch.utils.data import Dataset
 import numpy as np
 import config_defaults as cd
+import pickle as pkl
 
 
 class IMDBDatum:
@@ -92,7 +93,7 @@ def construct_dataset(dataset_dir, dataset_size, offset=0):
     output = []
     all_pos = os.listdir(pos_dir)
     all_neg = os.listdir(neg_dir)
-    for i in tqdm(range(offset, offset + single_label_size)):
+    for i in range(offset, offset + single_label_size):
         output.append(read_file_as_datum(os.path.join(pos_dir, all_pos[i]), 1))
         output.append(read_file_as_datum(os.path.join(neg_dir, all_neg[i]), 0))
     return output
@@ -117,7 +118,15 @@ def imdb_collate_func(batch):
                             mode="constant", constant_values=0)
         data_list.append(padded_vec)
 
-    return [torch.from_numpy(np.array(data_list)).to(cd.DEVICE),
+    """ check types on the np array """
+    nparr = np.array(data_list)
+    if nparr.dtype.name == 'float64':
+        print(data_list)
+        pkl.dump(batch, open(r'./results/batch.p', "wb"))
+
+    rtTensor = torch.from_numpy(nparr).to(cd.DEVICE)
+
+    return [rtTensor,
             torch.LongTensor(length_list).to(cd.DEVICE),
             torch.LongTensor(label_list).to(cd.DEVICE)]
 
