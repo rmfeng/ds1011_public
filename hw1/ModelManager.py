@@ -61,7 +61,7 @@ class ModelManager:
         """
         pickle_path_train_val = cd.DIR_PICKLE + 'trainval_' + hparam_to_str(self.hparams, cd.DATA_HPARAMS)
         pickle_path_test = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams, cd.DATA_HPARAMS)
-        pickle_indexer = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams, cd.INDEXER_HPARAMS)
+        pickle_indexer = cd.DIR_PICKLE + 'idx_' + hparam_to_str(self.hparams, cd.INDEXER_HPARAMS)
 
         """ --- DATA LOADING AND RECALC --- """
         if self.load_pickles and os.path.isfile(pickle_path_train_val) \

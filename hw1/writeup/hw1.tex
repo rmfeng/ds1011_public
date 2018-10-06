@@ -1,0 +1,35 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\graphicspath{ {./img/} }
+\usepackage[margin=1in]{geometry}
+
+\title{My first LaTeX}
+\author{Rong Feng - rf1316}
+
+\begin{document}
+
+\maketitle
+
+\section{Summary}
+Introduce the Project Hre \cite{latexcompanion,knuthwebsite}. 
+
+
+\section{Establishing a Baseline Model}
+The END
+
+
+\section{Hyperparameter Tuning}
+
+\begin{figure}[!h]
+  \centering
+    \includegraphics[scale=0.5]{lr_explore}
+  \caption{LR Explore} \label{fig:lr}
+\end{figure}
+
+\medskip
+
+\bibliographystyle{unsrt}%Used BibTeX style is unsrt
+\bibliography{references}
+
+\end{document}
