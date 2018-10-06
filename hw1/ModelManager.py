@@ -7,6 +7,8 @@ import logging
 import os
 import torch.nn as nn
 import torch.nn.functional as tfunc
+from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 import pandas as pd
 import config_defaults as cd
@@ -15,7 +17,7 @@ import BagOfWords as BoW
 import ngrams
 import pickle as pkl
 import time
-# from tqdm import tnrange
+from tqdm import tnrange
 # from tqdm import tqdm_notebook as tqdm
 cd.init_logger()
 logger = logging.getLogger('__main__')
@@ -38,6 +40,7 @@ class ModelManager:
         self.res_df = None
         self.cur_res = _init_cur_res()
         self.cur_res.update(self.hparams)
+        self.optimizer = None
 
         assert self.hparams['VAL_SIZE'] < cd.TRAIN_AND_VAL_SIZE
 
@@ -101,6 +104,7 @@ class ModelManager:
         """ --- INDEXER LOADING AND RECALC --- """
         if self.load_pickles and os.path.isfile(pickle_indexer):
             # load the indexer
+            logger.info("found pickle files for indexer in %s, loading them ... " % cd.DIR_PICKLE)
             train_ngram_indexer = pkl.load(open(pickle_indexer, "rb"))
         else:
             # need to do process the ngrams data=
@@ -181,7 +185,11 @@ class ModelManager:
 
         op_constr = self.hparams['OPTIMIZER']
         optimizer = op_constr(self.model.parameters(), lr=self.hparams['LR'])
+        self.optimizer = optimizer
         criterion = nn.CrossEntropyLoss()
+
+        # lr adjustments
+        scheduler = ExponentialLR(optimizer, gamma=self.hparams['LR_DECAY_RATE'])
 
         # saving unk ratios
         self.cur_res['pct_unk_train'] = self._calc_unknown_ratio(set_name='train')
@@ -189,7 +197,9 @@ class ModelManager:
 
         stop_training = False
         total_iterated = 0
+
         for epoch in range(train_epochs):
+            scheduler.step()
             for i, (data, lengths, labels) in enumerate(self.loaders['train']):
                 total_iterated += self.hparams['BATCH_SIZE']
                 self.model.train()  # good practice to set the model to training mode (dropout)
@@ -203,8 +213,13 @@ class ModelManager:
                 # validate every 4 batches
                 if (i + 1) % (self.hparams['BATCH_SIZE'] * self.hparams['VAL_FREQ']) == 0:
                     val_acc = test_model(self.loaders['val'], self.model)
-                    logger.info('Epoch: [{}/{}], Step: [{}/{}], Validation Acc: {}'.format(
-                        epoch + 1, self.hparams['NEPOCH'], i + 1, len(self.loaders['train']), val_acc))
+                    logger.info('Epoch: [%s/%s], Step: [%s/%s], Val Acc: %s, LR: %.4f' %
+                                (epoch + 1,
+                                 self.hparams['NEPOCH'],
+                                 i + 1,
+                                 len(self.loaders['train']),
+                                 val_acc,
+                                 optimizer.param_groups[0]['lr']))
 
                     self.validation_acc_history.append(val_acc)
                     # check if we need to earily stop the model
@@ -276,6 +291,15 @@ class ModelManager:
             logger.info("results saved to %s" % res_path)
 
 
+def build_lr_func(decay):
+    def lamda_mult(x):
+        if x is None or x == 0.:
+            return 1.0
+        else:
+            return decay * x
+    return lamda_mult
+
+
 def hparam_to_str(hparams, req_params):
     final_str = ''
     for key in sorted(hparams):
@@ -330,3 +354,12 @@ def _init_cur_res():
         'pct_unk_train': '',
         'pct_unk_val': ''
     }
+
+
+if __name__ == '__main__':
+    mm = ModelManager()
+    mm.load_data()
+    mm.data_to_pipe()
+    param_overrides = {'EARLY_STOP': False}
+    mm.hparams.update(param_overrides)
+    mm.train(epoch_override=2, reload_data=False)

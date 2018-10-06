@@ -1,0 +1,62 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage[english]{isodate}
+\usepackage[document]{ragged2e}
+\graphicspath{ {./img/} }
+\usepackage{amsmath}
+
+\title{DSGA1011 Homework 1: Bag of N-grams Classification}
+\author{Rong Feng - rf1316}
+\date{\printdayoff\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Summary}
+\par 
+\justify
+As proscribed in the assignment description, this exercise uses bag-of-ngrams embeddings and a fully connected linear layer to classify positive and negative IMDB reviews. The final validation accuracy achieved after hyperparameter optimization was 93.3\% and final text accuracy was 91.3\%.
+
+\par
+\justify
+Following the assignment recommendation, the training set size was set to 20000 and validation to 5000. The test set of 25000 was only used at the end to provide the test accuracy and not touched or optimized over in any other way.
+
+\par
+\justify
+The final model used was ... ...
+
+
+\section{Architecture}
+As specified in the assingment, the model architecture is simply a ngram embedding lookup layer, followed by sum function, and finally a fully-connected linear layer that outputs the logit of the predicted classes. The used loss was binary cross entropy loss \eqref{eq:1}
+
+\begin{equation}
+l = -(y*log(p) + (1-y)*log(1-p))\label{eq:1}
+\end{equation}
+\begin{equation*}
+y \in{\{1,0\}} = the\ class\ label
+\end{equation*}
+\begin{equation*}
+log(p) = the\ model\ output\ logit
+\end{equation*}
+\begin{equation*}
+p = the\ model\ predicted\ probability
+\end{equation*}
+
+\section{Data Preparation}
+Using the github code base for the assignment in 2017 as a starting point, functionality was added to perform the required data preparation \cite{repo2017}
+
+\section{Establishing Baseline}
+
+\section{Hyperparameter Tuning}
+
+\cite{bagoftricks}. 
+
+\medskip
+
+\bibliographystyle{unsrt}%Used BibTeX style is unsrt
+\bibliography{refs}
+
+\end{document}

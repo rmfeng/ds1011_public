@@ -14,6 +14,7 @@ def init_logger():
 
 # DEFAULT HYPERPARAMETERS
 LR = 0.01                       # learning rate
+LR_DECAY_RATE = 0.95            # decay factor for the learning rate per epoch
 NEPOCH = 10                     # number epoch to train
 BATCH_SIZE = 32                 # number of data in each minibatch
 NGRAM_SIZE = 2                  # (1, 2, 3, 4)
@@ -27,7 +28,6 @@ REMOVE_PUNC = True              # whether to remove punctuation in the text
 EARLY_STOP = True               # whether or not the model considers early stopping
 EARLY_STOP_LOOKBACK = 4         # number of batches to look back when consider to early stop
 EARLY_STOP_MIN_IMPROVE = 0.01   # minimum improvement required in early stop
-
 
 # OTHER PARAMETERS
 PAD_IDX = 0
@@ -45,6 +45,7 @@ DEVICE = 'cpu'
 
 DEFAULT_HPARAMS = {
     'LR': LR,
+    'LR_DECAY_RATE': LR_DECAY_RATE,
     'NEPOCH': NEPOCH,
     'BATCH_SIZE': BATCH_SIZE,
     'NGRAM_SIZE': NGRAM_SIZE,

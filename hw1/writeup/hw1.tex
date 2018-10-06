@@ -1,35 +1,82 @@
 \documentclass[a4paper,10pt]{article}
 \usepackage[utf8]{inputenc}
-\usepackage{graphicx}
-\graphicspath{ {./img/} }
 \usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage[english]{isodate}
+\usepackage[document]{ragged2e}
+\graphicspath{ {./img/} }
+\usepackage{amsmath}
+\usepackage{makecell}
+\usepackage{longtable}
 
-\title{My first LaTeX}
+\title{DSGA1011 Homework 1: Bag of N-grams Classification}
 \author{Rong Feng - rf1316}
+\date{\printdayoff\today}
 
 \begin{document}
 
 \maketitle
 
 \section{Summary}
-Introduce the Project Hre \cite{latexcompanion,knuthwebsite}. 
+\par 
+\justify
+As proscribed in the assignment description, this exercise uses bag-of-ngrams and a fully connected linear layer to classify positive and negative IMDB reviews. The final validation accuracy achieved after hyperparameter optimization was xx.x\% and final text accuracy was xx.x\%.
+
+\par
+\justify
+Following the assignment recommendation, the training set size was set to 20000 and validation to 5000. The test set of 25000 was only used at the end to provide the test accuracy and not touched or optimized over in any other way.
+
+\par
+\justify
+The final model used was ... ...
 
 
-\section{Establishing a Baseline Model}
-The END
+\section{Architecture}
+As specified in the assignment, the model architecture is simply a ngram embedding lookup layer, followed by sum function to encode the bag-of-ngrams, and finally a fully-connected linear layer that outputs the logit of the predicted classes. The used loss was binary cross entropy loss \eqref{eq:1}
+
+\begin{equation}
+l = -(y*log(p) + (1-y)*log(1-p))\label{eq:1}
+\end{equation}
+\begin{equation*}
+y \in{\{1,0\}} = the\ class\ label
+\end{equation*}
+\begin{equation*}
+log(p) = the\ model\ output\ logit
+\end{equation*}
+\begin{equation*}
+p = the\ model\ predicted\ probability
+\end{equation*}
+
+\section{Data Preparation}
+\par
+\justify
+Using the github code base for the assignment in 2017 as a starting point, functionality was added to perform the required data preparation \cite{repo2017}. These functionalities include: Tokenization, ngram extraction, building and indexing the vocabulary, and finally loading the data into the PyTorch DataLoader pipeline. Each of these functionalities and their associated hyperparameters are described below:
+
+\par
+\justify
+\textbf{Tokenization:} To convert the raw text of the reviews to lists of tokens two methods were employed: "naive" and "spacy" methods. For the naive method, the sentences were tokenized by splitting them with the space delimiter. For the spacy method, the smart-tokenization implementation of spacy was called on the input sentence. For example under spacy, "don't" is tokenized into "do" and "n't", extracting the meaning out of the english abbreviation. In both methods both stop words and punctionation are moved if specified by their respective hyperparameters.
+
+\par
+\justify
+\textbf{Ngram Extraction:} From the list of tokens, we iterate through them to extract all ngrams of size equal or less than the specified hyperparameter. 
+
+\par
+\justify
+\textbf{Building Vocabulary:} Using the python Counter object, we take the top n most frequently occuring ngrams and form our vocabulary of ngrams, where n is determined by the VOC\_SIZE hyperparameter. For each input review, its ngrams are then mapped to the index of that ngram in the
 
 
-\section{Hyperparameter Tuning}
+\section{Establishing Baseline}
+Starting with heuristically selected hyperparamters as a source configuration, we run basic ablation analysis over single or sets of hyperparameters to arrive at our base-line with the following hyperparameters.
 
-\begin{figure}[!h]
-  \centering
-    \includegraphics[scale=0.5]{lr_explore}
-  \caption{LR Explore} \label{fig:lr}
-\end{figure}
+\section{Further Hyperparameter Tuning}
+Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum 
+
+\section{Filler}
+Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum 
 
 \medskip
 
 \bibliographystyle{unsrt}%Used BibTeX style is unsrt
-\bibliography{references}
+\bibliography{refs}
 
 \end{document}
