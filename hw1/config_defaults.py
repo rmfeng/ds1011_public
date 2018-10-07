@@ -18,15 +18,15 @@ LR_DECAY_RATE = 0.95            # decay factor for the learning rate per epoch
 NEPOCH = 10                     # number epoch to train
 BATCH_SIZE = 32                 # number of data in each minibatch
 NGRAM_SIZE = 2                  # (1, 2, 3, 4)
-VOC_SIZE = 10000                # takes top n word from the vocab
-EMBEDDING_DIM = 100             # dimension size for the ngram embeddings
-NGRAM_MODE = 'naive'            # {'naive', 'spacy'}
+VOC_SIZE = 100000               # takes top n word from the vocab
+EMBEDDING_DIM = 50              # dimension size for the ngram embeddings
+NGRAM_MODE = 'spacy'            # {'naive', 'spacy'}
 VAL_SIZE = 5000                 # total data size 25k for both train/val and test
 VAL_FREQ = 4                    # check for early stop every n batches
 REMOVE_STOP_WORDS = True        # whether to remove stop words in the text
 REMOVE_PUNC = True              # whether to remove punctuation in the text
 EARLY_STOP = True               # whether or not the model considers early stopping
-EARLY_STOP_LOOKBACK = 4         # number of batches to look back when consider to early stop
+EARLY_STOP_LOOKBACK = 8        # number of batches to look back when consider to early stop
 EARLY_STOP_MIN_IMPROVE = 0.01   # minimum improvement required in early stop
 
 # OTHER PARAMETERS

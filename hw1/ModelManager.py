@@ -66,6 +66,10 @@ class ModelManager:
         pickle_path_test = cd.DIR_PICKLE + 'test_' + hparam_to_str(self.hparams, cd.DATA_HPARAMS)
         pickle_indexer = cd.DIR_PICKLE + 'idx_' + hparam_to_str(self.hparams, cd.INDEXER_HPARAMS)
 
+        logger.info("looking for the following file paths: %s\n%s\n%s" % (pickle_path_train_val,
+                                                                          pickle_path_test,
+                                                                          pickle_indexer))
+
         """ --- DATA LOADING AND RECALC --- """
         if self.load_pickles and os.path.isfile(pickle_path_train_val) \
                 and os.path.isfile(pickle_path_test):

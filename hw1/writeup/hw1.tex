@@ -8,6 +8,7 @@
 \usepackage{amsmath}
 \usepackage{makecell}
 \usepackage{longtable}
+\usepackage{textcomp}
 
 \title{DSGA1011 Homework 1: Bag of N-grams Classification}
 \author{Rong Feng - rf1316}
@@ -62,11 +63,35 @@ Using the github code base for the assignment in 2017 as a starting point, funct
 
 \par
 \justify
-\textbf{Building Vocabulary:} Using the python Counter object, we take the top n most frequently occuring ngrams and form our vocabulary of ngrams, where n is determined by the VOC\_SIZE hyperparameter. For each input review, its ngrams are then mapped to the index of that ngram in the
+\textbf{Building Vocabulary:} Using the python Counter object, we take the top n most frequently occuring ngrams and form our vocabulary of ngrams, where n is determined by the VOC\_SIZE hyperparameter. For each input review, its ngrams are then mapped to the index of that ngram in the vocabulary. All encountered ngrams that do not belong to the vocabulary are mapped to a special \textlangle{}unk\textrangle{} placeholder. Further, a special \textlangle{}pad\textrangle{} placeholder is added at index 0 in the vocabulary used for input padding.
 
+\par
+\justify
+\textbf{Converting to PyTorch DataLoader:} Finally, a collate function was implemented in PyTorch's required format. It takes the ngram indexes of the inputs and converts a batch of inputs into a PyTorch Tensor representation. The input data is also wrapped by the DataLoader to take advantage of various convienence implementations in the pytorch DataLoader such as shuffling and batching.
 
 \section{Establishing Baseline}
-Starting with heuristically selected hyperparamters as a source configuration, we run basic ablation analysis over single or sets of hyperparameters to arrive at our base-line with the following hyperparameters.
+Starting with heuristically selected hyperparamters as a source configuration, we run basic ablation analysis over single or sets of hyperparameters to arrive at our base-line with the following hyperparameters in Table \ref{tbl:hyperparams}
+
+\begin{table}[!htbp]
+\begin{tabular}{| l | l | l |}
+\hline
+Hyperparameter   & Description                                & Baseline Value \\
+\hline
+LR               & Learning Rate on used Optimizer            & 0.01           \\
+LR\_DECAY\_RATE  & Gamma decay rate per epoch                 & 0.95           \\
+NEPOCH           & Number of Total Epochs                     & 10             \\
+VOC\_SIZE        & Vocab Size                                 & 100k           \\
+EMBEDDING\_DIM   & Embedding Vector Dimension                 & 50             \\
+NGRAM\_MODE      & mode of tokenizer (spacy, naive)           & spacy          \\
+REMOVE\_STOP     & Whether to remove stop words               & True           \\
+REMOVE\_PUNC     & Whether to remove punctuation              & True           \\
+EARLY\_STOP      & Whether to consider early stop             & True           \\
+ES\_LOOKBACK     & \# of batches to look back for improvement & True           \\
+ES\_MIN\_IMPROVE & Minimum improvement required for ES        & True           \\
+\hline
+\end{tabular}
+\caption{Baseline Hyperparameters}\label{tbl:hyperparams}
+\end{table}
 
 \section{Further Hyperparameter Tuning}
 Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum Lorum Ipsum 
