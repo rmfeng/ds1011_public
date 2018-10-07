@@ -7,7 +7,6 @@ import logging
 import os
 import torch.nn as nn
 import torch.nn.functional as tfunc
-from torch.optim.lr_scheduler import LambdaLR
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 import pandas as pd
@@ -17,7 +16,7 @@ import BagOfWords as BoW
 import ngrams
 import pickle as pkl
 import time
-from tqdm import tnrange
+# from tqdm import tnrange
 # from tqdm import tqdm_notebook as tqdm
 cd.init_logger()
 logger = logging.getLogger('__main__')
@@ -36,7 +35,10 @@ class ModelManager:
         self.data = {}
         self.loaders = {}
         self.model = None
-        self.validation_acc_history = []
+        self.val_acc_hist = []
+        self.val_loss_hist = []
+        self.train_acc_hist = []
+        self.train_loss_hist = []
         self.res_df = None
         self.cur_res = _init_cur_res()
         self.cur_res.update(self.hparams)
@@ -50,6 +52,7 @@ class ModelManager:
         logger.info("allow pickle loads: %s, allow pickle saves: %s" % (self.load_pickles, self.save_pickles))
 
     def train(self, epoch_override=None, reload_data=True):
+        logger.info('Starting Training on device: %s' % cd.DEVICE)
         if reload_data:
             self.load_data()
             self.data_to_pipe()
@@ -82,7 +85,7 @@ class ModelManager:
 
             logger.info("loading datasets ...")
             train_and_val_set = dp.construct_dataset(cd.DIR_TRAIN, cd.TRAIN_AND_VAL_SIZE)
-            test_set = dp.construct_dataset(cd.DIR_TRAIN, cd.TEST_SIZE)
+            test_set = dp.construct_dataset(cd.DIR_TEST, cd.TEST_SIZE)
 
             logger.info("extracting ngram from training and val set of size %s..." % cd.TRAIN_AND_VAL_SIZE)
 
@@ -165,8 +168,11 @@ class ModelManager:
     def model_init(self):
         """ initializes the model """
         self.model = BoW.BagOfWords(len(self.data['vocab']), self.hparams['EMBEDDING_DIM']).to(cd.DEVICE)
-        self.validation_acc_history = []
-        self.cur_res['initial_val_acc'] = self.test_model(loader=self.loaders['val'])
+        self.val_acc_hist = []
+        self.val_loss_hist = []
+        self.train_acc_hist = []
+        self.train_loss_hist = []
+        self.cur_res['initial_val_acc'], _ = self.test_model(loader=self.loaders['val'])
 
         # need to reinit the cur_res with new hparams
         self.cur_res = _init_cur_res()
@@ -216,19 +222,27 @@ class ModelManager:
                 optimizer.step()
                 # validate every 4 batches
                 if (i + 1) % (self.hparams['BATCH_SIZE'] * self.hparams['VAL_FREQ']) == 0:
-                    val_acc = test_model(self.loaders['val'], self.model)
-                    logger.info('Epoch: [%s/%s], Step: [%s/%s], Val Acc: %s, LR: %.4f' %
+                    val_acc, val_loss = self.test_model(self.loaders['val'])
+                    train_acc, train_loss = self.test_model(self.loaders['train'])
+                    logger.info('Ep: [%s/%s], Sp: [%s/%s], VAcc: %s, VLoss: %.1f, TAcc: %s, TLoss: %.1f, LR: %.4f' %
                                 (epoch + 1,
                                  self.hparams['NEPOCH'],
                                  i + 1,
                                  len(self.loaders['train']),
                                  val_acc,
+                                 val_loss,
+                                 train_acc,
+                                 train_loss,
                                  optimizer.param_groups[0]['lr']))
 
-                    self.validation_acc_history.append(val_acc)
+                    self.val_acc_hist.append(val_acc)
+                    self.val_loss_hist.append(val_loss)
+                    self.train_acc_hist.append(train_acc)
+                    self.train_loss_hist.append(train_loss)
+
                     # check if we need to earily stop the model
                     if self.hparams['EARLY_STOP']:
-                        stop_training = early_stop(self.validation_acc_history,
+                        stop_training = early_stop(self.val_acc_hist,
                                                    self.hparams['EARLY_STOP_LOOKBACK'],
                                                    self.hparams['EARLY_STOP_MIN_IMPROVE'])
                 if stop_training:
@@ -238,12 +252,12 @@ class ModelManager:
                 break
             if epoch in (1, 2, 3):  # saves first 3 epochs only if we haven't broken
                 dict_str = 'epoch' + str(epoch) + '_val_acc'
-                val_acc = self.test_model(loader=self.loaders['val'])
+                val_acc, val_loss = self.test_model(loader=self.loaders['val'])
                 self.cur_res[dict_str] = val_acc
 
         # stopped training so save the final val acc
-        if len(self.validation_acc_history) > 0:
-            self.cur_res['final_val_acc'] = self.validation_acc_history[-1]
+        if len(self.val_acc_hist) > 0:
+            self.cur_res['final_val_acc'] = self.val_acc_hist[-1]
 
         # timing training and other training results
         self.cur_res['training_time'] = str(round(time.time() - start_time, 2))
@@ -314,30 +328,35 @@ def hparam_to_str(hparams, req_params):
 
 def test_model(loader, model):
     """
-    Help function that tests the model's performance on a dataset
-    @param: loader - data loader for the dataset to test against
+    Helper function that tests the model's performance on a dataset
+    :param: loader - data loader for the dataset to test against
+    :returns: acc
+    :returns: loss value
     """
     correct = 0
     total = 0
+    cur_loss = 0
+
     model.eval()  # good practice to set the model to evaluation mode (no dropout)
     for data, lengths, labels in loader:
         data_batch, length_batch, label_batch = data, lengths, labels
         outputs = tfunc.softmax(model(data_batch, length_batch), dim=1)
         predicted = outputs.max(1, keepdim=True)[1]
+        cur_loss += tfunc.cross_entropy(outputs, labels).cpu().detach().numpy()
 
         total += labels.size(0)
         correct += predicted.eq(labels.view_as(predicted)).sum().item()
-    return 100 * correct / total
+    return 100 * correct / total, cur_loss
 
 
 def early_stop(val_acc_history, t=2, required_progress=0.01):
     """
     Stop the training if there is no non-trivial progress in k steps
-    @param val_acc_history: a list contains all the historical validation acc
-    @param required_progress: the next acc should be higher than the previous by
+    :param val_acc_history: a list contains all the historical validation acc
+    :param required_progress: the next acc should be higher than the previous by
         at least required_progress amount to be non-trivial
-    @param t: number of training steps
-    @return: a boolean indicates if the model should earily stop
+    :param t: number of training steps
+    :return: a boolean indicates if the model should earily stop
     """
     if len(val_acc_history) >= t + 1 and val_acc_history[-t - 1] > max(val_acc_history[-t:]) - required_progress:
         return True
