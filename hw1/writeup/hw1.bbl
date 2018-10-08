@@ -4,4 +4,13 @@
 NYU Data~Science Department.
 \newblock {Github Repo: DS-GA-1011 Fall 2017}.
 
+\bibitem{repospacy}
+{spaCy.io}.
+\newblock {Github Repo: spaCy}.
+
+\bibitem{learningrate}
+{Towards Data Science}.
+\newblock {Understanding Learning Rates and How It Improves Performance in Deep
+  Learning}.
+
 \end{thebibliography}
