@@ -110,3 +110,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# others
+.DS_Store
+**/kenlm/
+*.arpa
+*.txt
+*.vec
