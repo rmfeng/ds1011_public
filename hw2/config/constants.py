@@ -1,20 +1,15 @@
 class PathKey:
-    TEST_PATH = 'test_path'     # deprecate
-    TRAIN_PATH = 'train_path'   # deprecate
-    NLI_PATH = 'nli_path'
+    SNLI_TRAIN_PATH = 'nli_train_path'
+    SNLI_VAL_PATH = 'nli_val_path'
+    PRETRAINED_PATH = 'pretrained_path'
     MODEL_SAVES = 'model_saves'
     MODEL_PATH = 'model_path'
 
 
 class HyperParamKey:
-    TRAIN_PLUS_VAL_SIZE = 'train_plus_val_size'
     LR = 'lr'
-    TEST_SIZE = 'test_size'
-    VAL_SIZE = 'val_size'
     NUM_EPOCH = 'num_epochs'
     EMBEDDING_DIM = 'embedding_dim'
-    NGRAM_SIZE = 'ngram_size'
-    REMOVE_PUNC = 'remove_punc'
     BATCH_SIZE = 'batch_size'
     VOC_SIZE = 'voc_size'
     TRAIN_LOOP_EVAL_FREQ = 'train_loop_check_freq'
