@@ -117,3 +117,5 @@ venv.bak/
 *.arpa
 *.txt
 *.vec
+*.p
+
