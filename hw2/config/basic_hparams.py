@@ -6,15 +6,16 @@ import torch
 
 
 DEFAULT_HPARAMS = {
-    HyperParamKey.NUM_EPOCH: 1,
+    HyperParamKey.NUM_EPOCH: 10,
     HyperParamKey.LR: 0.01,
     HyperParamKey.VOC_SIZE: 100000,
     HyperParamKey.TRAIN_LOOP_EVAL_FREQ: 10,
-    HyperParamKey.DROPOUT: 0.5,
-    HyperParamKey.BATCH_SIZE: 8,
+    HyperParamKey.DROPOUT_RNN: 0.5,
+    HyperParamKey.DROPOUT_FC: 0.5,
+    HyperParamKey.BATCH_SIZE: 256,
     HyperParamKey.FC_HIDDEN_SIZE: 100,
     HyperParamKey.RNN_HIDDEN_SIZE: 50,
-    HyperParamKey.RNN_NUM_LAYERS: 2,
+    HyperParamKey.RNN_NUM_LAYERS: 1,
     HyperParamKey.CHECK_EARLY_STOP: True,
     HyperParamKey.EARLY_STOP_LOOK_BACK: 10,
     HyperParamKey.EARLY_STOP_REQ_PROG: 0.01,

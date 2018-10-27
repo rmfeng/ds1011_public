@@ -19,7 +19,8 @@ class RNN(nn.Module):
                  emb_dim,
                  rnn_hidden_size,
                  rnn_num_layers,
-                 dropout,
+                 dropout_rnn,
+                 dropout_fc,
                  fc_hidden_size,
                  num_classes,
                  pretrained_vecs):
@@ -29,7 +30,11 @@ class RNN(nn.Module):
         self.rnn_hidden_size = rnn_hidden_size
         self.fc_hidden_size = fc_hidden_size
         self.num_classes = num_classes
-        self.dropout = dropout
+        self.dropout_fc = dropout_fc
+        if self.rnn_num_layers > 1:
+            self.dropout_rnn = dropout_rnn
+        else:
+            self.dropout_rnn = 0.0
 
         self.embed = nn.Embedding(vocab_size, emb_dim, padding_idx=PAD_IDX)
         self.embed.weight = nn.Parameter(pretrained_vecs)  # using pretrained
@@ -40,12 +45,13 @@ class RNN(nn.Module):
                           rnn_hidden_size,
                           rnn_num_layers,
                           batch_first=True,
-                          dropout=dropout,
+                          dropout=self.dropout_rnn,
                           bidirectional=True).to(DEVICE)
 
         self.fc = nn.Sequential(
             nn.Linear(2 * 2 * rnn_hidden_size * rnn_num_layers, fc_hidden_size),
             nn.ReLU(),
+            nn.Dropout(dropout_fc),
             nn.Linear(fc_hidden_size, num_classes)
         ).to(DEVICE)
 

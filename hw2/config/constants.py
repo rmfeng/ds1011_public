@@ -11,7 +11,8 @@ class HyperParamKey:
     NUM_EPOCH = 'num_epochs'
     BATCH_SIZE = 'batch_size'
     VOC_SIZE = 'voc_size'
-    DROPOUT = 'dropout'
+    DROPOUT_RNN = 'dropout_rnn'
+    DROPOUT_FC = 'dropout_fc'
     RNN_NUM_LAYERS = 'rnn_num_layers'
     RNN_HIDDEN_SIZE = 'rnn_hidden_size'
     FC_HIDDEN_SIZE = 'fc_hidden_size'
@@ -29,6 +30,7 @@ class HyperParamKey:
 class ControlKey:
     SAVE_BEST_MODEL = 'save_best_model'
     SAVE_EACH_EPOCH = 'save_each_epoch'
+    IGNORE_PARAMS = 'ignore_params'
 
 
 class LoaderParamKey:

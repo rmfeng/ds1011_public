@@ -150,6 +150,8 @@ class BaseModel(ABC):
                 self.epoch_curves[self.VAL_ACC].append(val_acc)
                 if self.cparams[ControlKey.SAVE_EACH_EPOCH]:
                     self.save()
+                if early_stop_training:
+                    break
 
             # final loss reporting
             val_acc, val_loss = self.eval_model(loader.loaders['val'])
@@ -261,9 +263,17 @@ class BaseModel(ABC):
     def _write_params_to_output_dict(self):
         """ writes hparams, lparams to the output_dict """
         if isinstance(self.hparams, dict):
-            self.output_dict.update(self.hparams)
+            hparams = self.hparams.copy()
+            for key in self.cparams[ControlKey.IGNORE_PARAMS]:
+                if key in hparams.keys():
+                    del hparams[key]
+            self.output_dict.update(hparams)
         if isinstance(self.lparams, dict):
-            self.output_dict.update(self.lparams)
+            lparams = self.lparams.copy()
+            for key in self.cparams[ControlKey.IGNORE_PARAMS]:
+                if key in lparams.keys():
+                    del lparams[key]
+            self.output_dict.update(lparams)
 
     @abstractmethod
     def eval_model(self, dataloader):

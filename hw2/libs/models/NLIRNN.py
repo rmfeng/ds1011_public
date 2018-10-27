@@ -26,7 +26,8 @@ class NLIRNN(BaseModel):
                          emb_dim=lparams[LoaderParamKey.EMBEDDING_DIM],
                          rnn_hidden_size=hparams[HyperParamKey.RNN_HIDDEN_SIZE],
                          rnn_num_layers=hparams[HyperParamKey.RNN_NUM_LAYERS],
-                         dropout=hparams[HyperParamKey.DROPOUT],
+                         dropout_fc=hparams[HyperParamKey.DROPOUT_FC],
+                         dropout_rnn=hparams[HyperParamKey.DROPOUT_RNN],
                          fc_hidden_size=hparams[HyperParamKey.FC_HIDDEN_SIZE],
                          num_classes=lparams[LoaderParamKey.NUM_CLASSES],
                          pretrained_vecs=t_pretrained
@@ -118,6 +119,8 @@ class NLIRNN(BaseModel):
                 self.epoch_curves[self.VAL_ACC].append(val_acc)
                 if self.cparams[ControlKey.SAVE_EACH_EPOCH]:
                     self.save()
+                if early_stop_training:
+                    break
 
             # final loss reporting
             val_acc, val_loss = self.eval_model(loader.loaders['val'])
@@ -141,9 +144,14 @@ class NLIRNN(BaseModel):
             total = 0
             cur_loss = 0
             self.model.eval()  # good practice to set the model to evaluation mode (no dropout)
-            for data, lengths, labels in dataloader:
-                pass
-            return 0.0, 0.0
+            for sent1_batch, sent2_batch, len1_batch, len2_batch, label_batch in dataloader:
+                outputs = F.softmax(self.model(sent1_batch, sent2_batch, len1_batch, len2_batch), dim=1)
+                predicted = outputs.max(1, keepdim=True)[1]
+                cur_loss += F.cross_entropy(outputs, label_batch).cpu().detach().numpy()
+
+                total += label_batch.size(0)
+                correct += predicted.eq(label_batch.view_as(predicted)).sum().item()
+            return 100 * correct / total, cur_loss
 
     def check_early_stop(self):
         """

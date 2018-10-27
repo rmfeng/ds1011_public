@@ -11,11 +11,8 @@ from torch.utils.data import DataLoader
 from config.constants import HyperParamKey, PathKey, LoaderParamKey
 from config.basic_conf import DEVICE
 from torch.utils.data import Dataset
-from collections import Counter
-import os
 import io
 import logging
-import string
 
 logger = logging.getLogger('__main__')
 LABEL2INDEX = {'entailment': 0, 'contradiction': 1, 'neutral': 2}

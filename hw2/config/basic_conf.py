@@ -9,6 +9,7 @@ from config.constants import PathKey, LogConfig, ControlKey
 DEFAULT_CONTROLS = {
     ControlKey.SAVE_BEST_MODEL: True,
     ControlKey.SAVE_EACH_EPOCH: True,
+    ControlKey.IGNORE_PARAMS: ['pre_trained_vecs'],
     PathKey.SNLI_TRAIN_PATH: 'data/nli/snli_train.tsv',
     PathKey.SNLI_VAL_PATH: 'data/nli/snli_val.tsv',
     PathKey.PRETRAINED_PATH: 'data/nli/wiki-news-300d-1M.vec',
