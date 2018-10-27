@@ -74,6 +74,7 @@ class ModelManager:
         The load_data method should be called right after manager init, and before model init.
         This is because the model initializtion requires information from the load routine
         :param loader_name: name that should appear in the loader registry libs.data_loaders.registry.reg
+        :param train_size: size of the training set to load (opt)
         """
         logger.info("Loading data using %s ..." % loader_name)
         self.dataloader = load_reg.reg[loader_name](self.cparams, self.hparams, self.tqdm, train_size=train_size)

@@ -11,7 +11,7 @@ DEFAULT_HPARAMS = {
     HyperParamKey.VOC_SIZE: 100000,
     HyperParamKey.TRAIN_LOOP_EVAL_FREQ: 10,
     HyperParamKey.DROPOUT: 0.5,
-    HyperParamKey.BATCH_SIZE: 4,
+    HyperParamKey.BATCH_SIZE: 8,
     HyperParamKey.FC_HIDDEN_SIZE: 100,
     HyperParamKey.RNN_HIDDEN_SIZE: 50,
     HyperParamKey.RNN_NUM_LAYERS: 2,

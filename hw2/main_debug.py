@@ -10,6 +10,6 @@ conf.init_logger(logging.INFO, logfile=None)
 
 
 mgr = mm.ModelManager()
-mgr.load_data(mm.loaderRegister.SNLI, train_size=1)
+mgr.load_data(mm.loaderRegister.SNLI, train_size=8)
 mgr.new_model(mm.modelRegister.NLIRNN)
 mgr.train()

@@ -18,7 +18,7 @@ import logging
 import string
 
 logger = logging.getLogger('__main__')
-LABEL2INDEX = {'entailment': 1, 'contradiction': -1, 'neutral': 0}
+LABEL2INDEX = {'entailment': 0, 'contradiction': 1, 'neutral': 2}
 PAD_TOKEN, PAD_IDX = '<pad>', 0
 UNK_TOKEN, UNK_IDX = '<unk>', 1
 

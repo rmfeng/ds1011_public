@@ -47,7 +47,8 @@ class NLIRNN(BaseModel):
             criterion = self.hparams[HyperParamKey.CRITERION]()
 
             early_stop_training = False
-            for epoch in tqdm_handler(range(self.hparams[HyperParamKey.NUM_EPOCH] - self.cur_epoch)):
+            # for epoch in tqdm_handler(range(self.hparams[HyperParamKey.NUM_EPOCH] - self.cur_epoch)):
+            for epoch in range(self.hparams[HyperParamKey.NUM_EPOCH] - self.cur_epoch):
                 self.scheduler.step(epoch=self.cur_epoch)  # scheduler calculates the lr based on the cur_epoch
                 self.cur_epoch += 1
                 logger.info("stepped scheduler to epoch = %s" % str(self.scheduler.last_epoch + 1))

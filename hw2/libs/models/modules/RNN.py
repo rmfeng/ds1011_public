@@ -3,8 +3,9 @@ RNN Model for encoding the sentence pairs in snli
 """
 import torch
 import torch.nn as nn
-from libs.data_loaders.SNLILoader import PAD_IDX
 import logging
+from libs.data_loaders.SNLILoader import PAD_IDX
+from config.basic_conf import DEVICE
 
 logger = logging.getLogger('__main__')
 
@@ -23,35 +24,35 @@ class RNN(nn.Module):
                  num_classes,
                  pretrained_vecs):
         super(RNN, self).__init__()
+        self.vocab_size = vocab_size
         self.rnn_num_layers = rnn_num_layers
         self.rnn_hidden_size = rnn_hidden_size
         self.fc_hidden_size = fc_hidden_size
         self.num_classes = num_classes
         self.dropout = dropout
 
-        # self.embed = nn.Embedding(vocab_size, emb_dim, padding_idx=PAD_IDX)
-        # self.embed.weight = nn.Parameter(pretrained_vecs)  # using pretrained
-        # self.embed.weight.requires_grad = False  # freeze params
-        self.embed = nn.Embedding.from_pretrained(pretrained_vecs, freeze=True)
+        self.embed = nn.Embedding(vocab_size, emb_dim, padding_idx=PAD_IDX)
+        self.embed.weight = nn.Parameter(pretrained_vecs)  # using pretrained
+        self.embed.weight.requires_grad = False  # freeze params
+        # self.embed = nn.Embedding.from_pretrained(pretrained_vecs, freeze=True)
 
         self.rnn = nn.GRU(emb_dim,
                           rnn_hidden_size,
                           rnn_num_layers,
                           batch_first=True,
                           dropout=dropout,
-                          bidirectional=True)
+                          bidirectional=True).to(DEVICE)
 
         self.fc = nn.Sequential(
-            nn.Linear(2 * rnn_hidden_size, fc_hidden_size),
+            nn.Linear(2 * 2 * rnn_hidden_size * rnn_num_layers, fc_hidden_size),
             nn.ReLU(),
             nn.Linear(fc_hidden_size, num_classes)
-        )
+        ).to(DEVICE)
 
-        self.hidden_vec1 = None
-        self.hidden_vec2 = None
+        self.concated_hidden = None
 
     def _init_rnn_hidden(self, batch_size):
-        return torch.zeros(self.rnn_num_layers * 2, batch_size, self.rnn_hidden_size)
+        return torch.zeros(self.rnn_num_layers * 2, batch_size, self.rnn_hidden_size).to(DEVICE)
 
     def forward(self, sent1, sent2, len1, len2):
         # the loader should have already sorted the inputs in descending len1
@@ -61,22 +62,12 @@ class RNN(nn.Module):
         batch_size, sent1_len = sent1.size()
         _, sent2_len = sent2.size()
 
-        # init hidden states for both GRUs
-        # self.hidden_vec1 = self._init_rnn_hidden(batch_size)
-        # self.hidden_vec2 = self._init_rnn_hidden(batch_size)
-        self.hidden_vec1 = None
-        self.hidden_vec2 = None
-
         # feeding the first sent through the GRU
         embed1 = self.embed(sent1)
-        embed1 = torch.nn.utils.rnn.pack_padded_sequence(embed1, len1.cpu().numpy(), batch_first=True)
+        embed1 = torch.nn.utils.rnn.pack_padded_sequence(embed1, len1, batch_first=True)
         self.rnn.flatten_parameters()
-
-        logger.info("embed1 type: %s" % type(embed1))
-        logger.info("hidden1 type: %s" % type(self.hidden_vec1))
-
-        rnn_out1, self.hidden_vec1 = self.rnn(embed1, self.hidden_vec1)
-        rnn_out1, _ = torch.nn.utils.rnn.pad_packed_sequence(rnn_out1, batch_first=True)
+        hidden_vec1 = self._init_rnn_hidden(batch_size)
+        rnn_out1, hidden_vec1 = self.rnn(embed1, hidden_vec1)  # RNN handles hidden state init
 
         # feeding the 2nd sent through the GRU
         # first sorting
@@ -85,18 +76,25 @@ class RNN(nn.Module):
 
         # fpass
         embed2 = self.embed(sorted_sent2)
-        embed2 = torch.nn.utils.rnn.pack_padded_sequence(embed2, sorted_len2.cpu().numpy(), batch_first=True)
-        rnn_out2, self.hidden_vec2 = self.rnn(embed2, self.hidden_vec2)
-        rnn_out2, _ = torch.nn.utils.rnn.pad_packed_sequence(rnn_out2, batch_first=True)
+        embed2 = torch.nn.utils.rnn.pack_padded_sequence(embed2, sorted_len2, batch_first=True)
+        self.rnn.flatten_parameters()
+
+        hidden_vec2 = self._init_rnn_hidden(batch_size)
+        rnn_out2, hidden_vec2 = self.rnn(embed2, hidden_vec2)  # RNN handles hidden state init
 
         # unsort
-        rnn_out2 = torch.index_select(rnn_out2, 0, idx1_sort)
+        hidden_vec2 = torch.index_select(hidden_vec2, 1, idx1_sort)
 
         # cat
-        concat = torch.cat((rnn_out1, rnn_out2), 1)
+        h1_tsr_tuple = tuple(hidden_vec1[x] for x in range(hidden_vec1.shape[0]))
+        h2_tsr_tuple = tuple(hidden_vec2[x] for x in range(hidden_vec2.shape[0]))
+        cat_h1_tsr = torch.cat(h1_tsr_tuple, 1)
+        cat_h2_tsr = torch.cat(h2_tsr_tuple, 1)
+
+        self.concated_hidden = torch.cat((cat_h1_tsr, cat_h2_tsr), 1)
 
         # fpass through fc layers
-        fc_out = self.fc(concat)
+        fc_out = self.fc(self.concated_hidden)
 
         # returns logits
         return fc_out
