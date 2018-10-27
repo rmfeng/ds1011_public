@@ -9,9 +9,12 @@ class PathKey:
 class HyperParamKey:
     LR = 'lr'
     NUM_EPOCH = 'num_epochs'
-    EMBEDDING_DIM = 'embedding_dim'
     BATCH_SIZE = 'batch_size'
     VOC_SIZE = 'voc_size'
+    DROPOUT = 'dropout'
+    RNN_NUM_LAYERS = 'rnn_num_layers'
+    RNN_HIDDEN_SIZE = 'rnn_hidden_size'
+    FC_HIDDEN_SIZE = 'fc_hidden_size'
     TRAIN_LOOP_EVAL_FREQ = 'train_loop_check_freq'
     CHECK_EARLY_STOP = 'check_early_stop'
     EARLY_STOP_LOOK_BACK = 'es_look_back'
@@ -30,6 +33,9 @@ class ControlKey:
 
 class LoaderParamKey:
     ACT_VOCAB_SIZE = 'act_vocab_size'
+    PRETRAINED_VECS = 'pre_trained_vecs'
+    EMBEDDING_DIM = 'embedding_dim'
+    NUM_CLASSES = 'num_classes'
 
 
 class StateKey:

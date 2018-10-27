@@ -244,7 +244,8 @@ class BaseModel(ABC):
 
     def _init_optim(self):
         op_constr = self.hparams[HyperParamKey.OPTIMIZER_ENCODER]
-        self.optim = op_constr(self.model.parameters(), lr=self.hparams[HyperParamKey.LR])
+        self.optim = op_constr(filter(lambda p: p.requires_grad, self.model.parameters()),
+                               lr=self.hparams[HyperParamKey.LR])
 
     def _init_scheduler(self):
         sche_constr = self.hparams[HyperParamKey.SCHEDULER]

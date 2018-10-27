@@ -27,6 +27,7 @@ class SNLILoader(BaseLoader):
     def __init__(self, cparams, hparams, tqdm, train_size=None):
         super().__init__(cparams, hparams, tqdm)
         self.train_size = train_size
+        self.num_classes = len(LABEL2INDEX.keys())
         self.loaded_embeddings = None
         self.vocab_words = None
         self.id2token = None
@@ -36,6 +37,12 @@ class SNLILoader(BaseLoader):
     def load(self):
         self._load_raw_data()
         self._data_to_pipe()
+        return {
+            LoaderParamKey.ACT_VOCAB_SIZE: self.act_vocab_size,
+            LoaderParamKey.PRETRAINED_VECS: self.loaded_embeddings,
+            LoaderParamKey.EMBEDDING_DIM: self.loaded_embeddings.shape[1],
+            LoaderParamKey.NUM_CLASSES: self.num_classes
+        }
 
     def _load_raw_data(self):
         """ loads raw data """
@@ -53,6 +60,7 @@ class SNLILoader(BaseLoader):
         self.loaded_embeddings = loaded_embeddings
         self.id2token = id2token
         self.token2id = token2id
+        self.act_vocab_size = len(id2token)
 
         logger.info("converting training set to index ...")
         self.data['train'] = self._convert_data_to_idx(train_set)

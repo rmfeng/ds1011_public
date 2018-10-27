@@ -2,9 +2,11 @@
 Example model that is managed by ModelManager
 """
 from libs.models.BaseModel import BaseModel
-from config.constants import HyperParamKey, ControlKey, StateKey, PathKey, LoadingKey, OutputKey
+from config.constants import HyperParamKey, ControlKey, StateKey, PathKey, LoadingKey, OutputKey, LoaderParamKey
 from config.basic_conf import DEVICE
+import torch
 import torch.nn.functional as F
+from libs.models.modules.RNN import RNN
 import logging
 
 logger = logging.getLogger('__main__')
@@ -17,7 +19,18 @@ class NLIRNN(BaseModel):
     """
     def __init__(self, hparams, lparams, cparams, label='scratch', nolog=False):
         super().__init__(hparams, lparams, cparams, label, nolog)
-        self.model = None
+        np_pretrained = lparams[LoaderParamKey.PRETRAINED_VECS]
+        t_pretrained = torch.from_numpy(np_pretrained).type(torch.FloatTensor).to(DEVICE)
+
+        self.model = RNN(vocab_size=lparams[LoaderParamKey.ACT_VOCAB_SIZE],
+                         emb_dim=lparams[LoaderParamKey.EMBEDDING_DIM],
+                         rnn_hidden_size=hparams[HyperParamKey.RNN_HIDDEN_SIZE],
+                         rnn_num_layers=hparams[HyperParamKey.RNN_NUM_LAYERS],
+                         dropout=hparams[HyperParamKey.DROPOUT],
+                         fc_hidden_size=hparams[HyperParamKey.FC_HIDDEN_SIZE],
+                         num_classes=lparams[LoaderParamKey.NUM_CLASSES],
+                         pretrained_vecs=t_pretrained
+                         )
 
     def train(self, loader, tqdm_handler):
         """
@@ -49,8 +62,7 @@ class NLIRNN(BaseModel):
                     outputs = self.model(sent1_batch,
                                          sent2_batch,
                                          len1_batch,
-                                         len2_batch,
-                                         label_batch)  # forward pass
+                                         len2_batch)  # forward pass
                     loss = criterion(outputs, label_batch)          # computing loss
                     loss.backward()                                 # backprop
                     self.optim.step()                               # taking a step

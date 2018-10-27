@@ -16,6 +16,7 @@ DEFAULT_CONTROLS = {
 }
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cpu")
 LOG_LEVEL_DEFAULT = getattr(logging, LogConfig['handlers']['default']['level'])
 
 

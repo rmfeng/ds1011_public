@@ -14,6 +14,7 @@ from config import basic_hparams
 from config import basic_conf as conf
 from tqdm import tqdm_notebook
 from tqdm import tqdm
+from config.basic_conf import DEVICE
 from string import punctuation
 import logging
 from libs._version import __version__
@@ -50,6 +51,7 @@ class ModelManager:
         self.mode = mode                # able to operate in console or notebook mode
         self.tqdm = tqdm                # memory ref to the tqdm handler in the correct mode
         self.change_mode(mode)          # setting the right mode fo the tqdm handler
+        self.device = DEVICE            # just so we know what device we're on
 
         logger.info(modelRegister.model_list)
         logger.info(loaderRegister.loader_list)
@@ -67,14 +69,14 @@ class ModelManager:
         info += '\n************ End of Model Manager Details ************'
         return info
 
-    def load_data(self, loader_name):
+    def load_data(self, loader_name, train_size=None):
         """
         The load_data method should be called right after manager init, and before model init.
         This is because the model initializtion requires information from the load routine
         :param loader_name: name that should appear in the loader registry libs.data_loaders.registry.reg
         """
         logger.info("Loading data using %s ..." % loader_name)
-        self.dataloader = load_reg.reg[loader_name](self.cparams, self.hparams, self.tqdm)
+        self.dataloader = load_reg.reg[loader_name](self.cparams, self.hparams, self.tqdm, train_size=train_size)
         # the load routine should return a dict of parameters that models need to init
         self.lparams = self.dataloader.load()
 
