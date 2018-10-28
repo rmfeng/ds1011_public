@@ -1,3 +1,9 @@
+### Version 0.5.0 - 10/21/2018
+Changes:
+- Extensive changes to write homework 2
+- for ModelManager specifically, some bug fixes as they were found through use
+- also refine various other methods as using them showed suboptimal formatsexten
+
 ### Version 0.4.0 - 10/21/2018
 Changes:
 - branched the code to 'homework' with the aim of catering to using the ModelManager for the homework

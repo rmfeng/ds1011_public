@@ -169,13 +169,16 @@ class BaseModel(ABC):
         f.write(meta_string)
         f.write('\n\nHyperparameters used:')
         for key in self.hparams.keys():
-            f.write("\n%s - %s" % (key, self.hparams[key]))
+            if key not in self.cparams[ControlKey.IGNORE_PARAMS]:
+                f.write("\n - %s - %s" % (key, self.hparams[key]))
         f.write('\n\nLoader parameters used:')
         for key in self.lparams.keys():
-            f.write("\n%s - %s" % (key, self.lparams[key]))
-        f.write('\n\nControl parameters used:')
+            if key not in self.cparams[ControlKey.IGNORE_PARAMS]:
+                f.write("\n - %s - %s" % (key, self.lparams[key]))
+        f.write('\n\n\nControl parameters used:')
         for key in self.cparams.keys():
-            f.write("\n%s - %s" % (key, self.cparams[key]))
+            if key not in self.cparams[ControlKey.IGNORE_PARAMS]:
+                f.write("\n - %s - %s" % (key, self.cparams[key]))
         f.close()
 
     def save(self, fn=None):

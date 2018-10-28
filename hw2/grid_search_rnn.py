@@ -43,4 +43,4 @@ for hp_tuple in list(itertools.product(lr_list, decay_rates, rnn_hidden_sizes, d
     mgr.graph_training_curves()
     mgr.dump_model()
 
-mgr.get_results().to_csv('model_saves/results.csv')
+mgr.get_results().to_csv('model_saves/rnn_results.csv')

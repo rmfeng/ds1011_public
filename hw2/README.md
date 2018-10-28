@@ -1,24 +1,21 @@
-# Homework 2
+## Homework 2
+
+The data items are not commited to GitHub, in order to run the code, please have the following structure for data:
+
+![data](img/required_data.png)
+
+For more a more detail guide on how to run the code, please refer to the notebook: 
+**use_guide.ipynb**
+
+The main scripts/notebooks used are in the root directory:
+- grid_search_rnn.py: searches various hyperparameter combinations for rnn
+    - results are in model_saves/rnn_results.csv
+- grid_search_cnn.py: searches various hyperparameter combinations for cnn
+    - results are in model_saves/cnn_results.csv
+- tune_mnli.py: tuning all of the mnli models
+    - results are in model_saves/mnli_tuning.csv
+- Other notebooks are mostly used for prototyping purposes.
 
 
-### RNN MNLI Res:
-'fiction': (44.52261306532663, 4.198111176490784),
+ 
 
-'telephone': (46.865671641791046, 4.148733019828796),
- 
-'slate': (44.81037924151697, 4.208318114280701),
- 
-'government': (44.98031496062992, 4.123942732810974),
- 
-'travel': (45.824847250509166, 4.149409294128418)
-
-### CNN MNLI Res:
-'fiction': 45.82074521651561,
- 
-'telephone': 46.46766169154229,
- 
-'slate': 43.11377245508982,
- 
-'government': 43.503937007874015,
- 
-'travel': 46.537678207739305
