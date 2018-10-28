@@ -1,4 +1,4 @@
-### Version 0.5.0 - 10/21/2018
+### Version 0.5.0 - 10/28/2018
 Changes:
 - Extensive changes to write homework 2
 - for ModelManager specifically, some bug fixes as they were found through use
