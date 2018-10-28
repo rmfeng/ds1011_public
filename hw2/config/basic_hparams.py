@@ -15,9 +15,11 @@ DEFAULT_HPARAMS = {
     HyperParamKey.BATCH_SIZE: 256,
     HyperParamKey.FC_HIDDEN_SIZE: 100,
     HyperParamKey.RNN_HIDDEN_SIZE: 50,
+    HyperParamKey.CNN_HIDDEN_SIZE: 100,
     HyperParamKey.RNN_NUM_LAYERS: 1,
     HyperParamKey.CHECK_EARLY_STOP: True,
     HyperParamKey.EARLY_STOP_LOOK_BACK: 10,
+    HyperParamKey.DECAY_LR_NO_IMPROV: 0.25,
     HyperParamKey.EARLY_STOP_REQ_PROG: 0.01,
     HyperParamKey.OPTIMIZER_ENCODER: torch.optim.Adam,
     HyperParamKey.OPTIMIZER_DECODER: torch.optim.Adam,  # not needed, but kept for future use

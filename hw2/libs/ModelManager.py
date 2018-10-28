@@ -147,8 +147,10 @@ class ModelManager:
             ax[0].legend()
 
             ax[1].plot(curves[self.model.TRAIN_LOSS], label='training loss')
-            ax[1].plot(curves[self.model.VAL_LOSS], label='val loss')
+            ax2 = ax[1].twinx()
+            ax2.plot(curves[self.model.VAL_LOSS], label='val loss', color='orange')
             ax[1].legend()
+            ax2.legend(bbox_to_anchor=(1, 0.95))
             ax[1].set_xlabel(xlab)
 
             if self.mode == self.OPT_MODE_CONSOLE:

@@ -3,12 +3,14 @@ registry for model constructors, used by ModelManager to lookup model constructo
 """
 from libs.models.BagOfWords import BagOfWords
 from libs.models.NLIRNN import NLIRNN
+from libs.models.NLICNN import NLICNN
 
 # todo make the registry dynamic based on the file name
 
 reg = {
     'BagOfWords': BagOfWords,
-    'NLIRNN': NLIRNN
+    'NLIRNN': NLIRNN,
+    'NLICNN': NLICNN
 }
 
 

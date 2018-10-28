@@ -1,5 +1,5 @@
 """
-Example model that is managed by ModelManager
+NLI Model using RNNs
 """
 from libs.models.BaseModel import BaseModel
 from config.constants import HyperParamKey, ControlKey, StateKey, PathKey, LoadingKey, OutputKey, LoaderParamKey
@@ -14,8 +14,7 @@ logger = logging.getLogger('__main__')
 
 class NLIRNN(BaseModel):
     """
-    example implementation of a model handler
-    can optionally also overload the train method if you want to use your own
+    NLI with RNN encoder
     """
     def __init__(self, hparams, lparams, cparams, label='scratch', nolog=False):
         super().__init__(hparams, lparams, cparams, label, nolog)
@@ -33,6 +32,12 @@ class NLIRNN(BaseModel):
                          pretrained_vecs=t_pretrained
                          )
 
+        # model parameter count
+        total_el = 0
+        for param in filter(lambda p: p.requires_grad, self.model.parameters()):
+            total_el += param.numel()
+        self.output_dict['total_param_count'] = total_el
+
     def train(self, loader, tqdm_handler):
         """
         overloading the train method on the BaseLoader due to difference in parameters
@@ -48,6 +53,7 @@ class NLIRNN(BaseModel):
             criterion = self.hparams[HyperParamKey.CRITERION]()
 
             early_stop_training = False
+            no_improvement = True
             # for epoch in tqdm_handler(range(self.hparams[HyperParamKey.NUM_EPOCH] - self.cur_epoch)):
             for epoch in range(self.hparams[HyperParamKey.NUM_EPOCH] - self.cur_epoch):
                 self.scheduler.step(epoch=self.cur_epoch)  # scheduler calculates the lr based on the cur_epoch
@@ -97,10 +103,14 @@ class NLIRNN(BaseModel):
                             self.save(fn=self.BEST_FN)
 
                         # reporting back up to output_dict
-
                         if is_best:
                             self.output_dict[OutputKey.BEST_VAL_ACC] = val_acc
                             self.output_dict[OutputKey.BEST_VAL_LOSS] = val_loss
+
+                        no_improvement = self.check_early_stop()
+                        if no_improvement and self.hparams[HyperParamKey.DECAY_LR_NO_IMPROV] < 1.0:
+                            self.scheduler.base_lr = self.scheduler.base_lr * \
+                                self.hparams[HyperParamKey.DECAY_LR_NO_IMPROV]
 
                         if self.hparams[HyperParamKey.CHECK_EARLY_STOP]:
                             early_stop_training = self.check_early_stop()
