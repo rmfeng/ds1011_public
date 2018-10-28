@@ -12,6 +12,8 @@ DEFAULT_CONTROLS = {
     ControlKey.IGNORE_PARAMS: ['pre_trained_vecs'],
     PathKey.SNLI_TRAIN_PATH: 'data/nli/snli_train.tsv',
     PathKey.SNLI_VAL_PATH: 'data/nli/snli_val.tsv',
+    PathKey.MNLI_TRAIN_PATH: 'data/nli/mnli_train.tsv',
+    PathKey.MNLI_VAL_PATH: 'data/nli/mnli_val.tsv',
     PathKey.PRETRAINED_PATH: 'data/nli/wiki-news-300d-1M.vec',
     PathKey.MODEL_SAVES: 'model_saves/'
 }
@@ -19,6 +21,11 @@ DEFAULT_CONTROLS = {
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # DEVICE = torch.device("cpu")
 LOG_LEVEL_DEFAULT = getattr(logging, LogConfig['handlers']['default']['level'])
+GENRE_LIST = ['fiction',
+              'telephone',
+              'slate',
+              'government',
+              'travel']
 
 
 def init_logger(loglevel=LOG_LEVEL_DEFAULT, logfile='mt.log'):

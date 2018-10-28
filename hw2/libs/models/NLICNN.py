@@ -23,6 +23,7 @@ class NLICNN(NLIRNN):
         self.model = CNN(vocab_size=lparams[LoaderParamKey.ACT_VOCAB_SIZE],
                          emb_dim=lparams[LoaderParamKey.EMBEDDING_DIM],
                          hidden_size=hparams[HyperParamKey.CNN_HIDDEN_SIZE],
+                         kernal_size=hparams[HyperParamKey.CNN_KERNAL_SIZE],
                          fc_hidden_size=hparams[HyperParamKey.FC_HIDDEN_SIZE],
                          dropout_fc=hparams[HyperParamKey.DROPOUT_FC],
                          num_classes=lparams[LoaderParamKey.NUM_CLASSES],

@@ -20,6 +20,7 @@ class CNN(nn.Module):
                  vocab_size,
                  emb_dim,
                  hidden_size,
+                 kernal_size,
                  fc_hidden_size,
                  dropout_fc,
                  num_classes,
@@ -31,8 +32,11 @@ class CNN(nn.Module):
         self.embed.weight = nn.Parameter(pretrained_vecs)  # using pretrained
         self.embed.weight.requires_grad = False  # freeze params
 
-        self.conv1 = nn.Conv1d(emb_dim, hidden_size, kernel_size=3, padding=1).to(DEVICE)
-        self.conv2 = nn.Conv1d(hidden_size, hidden_size, kernel_size=3, padding=1).to(DEVICE)
+        self.conv1 = nn.Conv1d(emb_dim, hidden_size, kernel_size=kernal_size
+                               , padding=int((kernal_size - 1) / 2)).to(DEVICE)
+
+        self.conv2 = nn.Conv1d(hidden_size, hidden_size, kernel_size=kernal_size
+                               , padding=int((kernal_size - 1) / 2)).to(DEVICE)
 
         self.fc = nn.Sequential(
             nn.Linear(2 * hidden_size, fc_hidden_size),
@@ -49,7 +53,8 @@ class CNN(nn.Module):
         hidden1 = F.relu(hidden1.contiguous().view(-1, hidden1.size(-1))).view(batch1_size, seq1_len, hidden1.size(-1))
         hidden1 = self.conv2(hidden1.transpose(1, 2)).transpose(1, 2)
         hidden1 = F.relu(hidden1.contiguous().view(-1, hidden1.size(-1))).view(batch1_size, seq1_len, hidden1.size(-1))
-        hidden1 = torch.sum(hidden1, dim=1)
+        hidden1, _ = torch.max(hidden1, 1)
+        # hidden1 = torch.squeeze(hidden1, dim=1)
 
         # sentence 2
         batch2_size, seq2_len = sent2.size()
@@ -58,7 +63,8 @@ class CNN(nn.Module):
         hidden2 = F.relu(hidden2.contiguous().view(-1, hidden2.size(-1))).view(batch2_size, seq2_len, hidden2.size(-1))
         hidden2 = self.conv2(hidden2.transpose(1, 2)).transpose(1, 2)
         hidden2 = F.relu(hidden2.contiguous().view(-1, hidden2.size(-1))).view(batch2_size, seq2_len, hidden2.size(-1))
-        hidden2 = torch.sum(hidden2, dim=1)
+        hidden2, _ = torch.max(hidden2, 1)
+        # hidden2 = torch.squeeze(hidden2, dim=1)
 
         concated_hidden = torch.cat((hidden1, hidden2), 1)
 

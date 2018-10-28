@@ -233,12 +233,30 @@ class BaseModel(ABC):
 
         logger.info("Successfully loaded checkpoint!")
 
-    def add_epochs(self, num_added):
-        self.hparams[HyperParamKey.NUM_EPOCH] += num_added
+    def add_epochs(self, num_added, reset_curve=False):
+        self.hparams[HyperParamKey.NUM_EPOCH] = num_added + self.cur_epoch
+        if reset_curve:
+            self._reset_curves()
         logger.info("added %s to required epochs count. \n"
                     "cur epoch=%s, required epochs=%s" % (num_added
                                                           , self.cur_epoch
                                                           , self.hparams[HyperParamKey.NUM_EPOCH]))
+
+    def _reset_curves(self):
+        self.iter_curves = {
+            self.TRAIN_ACC: [],
+            self.TRAIN_LOSS: [],
+            self.VAL_ACC: [],
+            self.VAL_LOSS: [],
+        }
+
+        # used for storing the curves by each model epoch
+        self.epoch_curves = {
+            self.TRAIN_ACC: [],
+            self.TRAIN_LOSS: [],
+            self.VAL_ACC: [],
+            self.VAL_LOSS: [],
+        }
 
     def _init_optim_and_scheduler(self):
         self._init_optim()

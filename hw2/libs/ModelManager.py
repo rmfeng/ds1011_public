@@ -69,7 +69,7 @@ class ModelManager:
         info += '\n************ End of Model Manager Details ************'
         return info
 
-    def load_data(self, loader_name, train_size=None):
+    def load_data(self, loader_name, train_size=None, **kwargs):
         """
         The load_data method should be called right after manager init, and before model init.
         This is because the model initializtion requires information from the load routine
@@ -77,7 +77,9 @@ class ModelManager:
         :param train_size: size of the training set to load (opt)
         """
         logger.info("Loading data using %s ..." % loader_name)
-        self.dataloader = load_reg.reg[loader_name](self.cparams, self.hparams, self.tqdm, train_size=train_size)
+        self.dataloader = load_reg.reg[loader_name](self.cparams, self.hparams, self.tqdm,
+                                                    train_size=train_size,
+                                                    **kwargs)
         # the load routine should return a dict of parameters that models need to init
         self.lparams = self.dataloader.load()
 
@@ -124,6 +126,12 @@ class ModelManager:
         """ dumps the existing model to clear up memory """
         self.model = None
         gc.collect()
+
+    def propogate_params(self):
+        """ sets manager's params through to the model """
+        self.model.hparams.update(self.hparams)
+        self.model.cparams.update(self.cparams)
+        self.model.lparams.update(self.lparams)
 
     def graph_training_curves(self, mode=GRAPH_MODE_TRAINING):
         """

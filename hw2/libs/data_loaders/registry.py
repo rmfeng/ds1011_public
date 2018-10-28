@@ -3,12 +3,14 @@ registry for loader constructors, used by ModelManager to lookup data loaders
 """
 from libs.data_loaders.ImdbLoader import ImdbLoader
 from libs.data_loaders.SNLILoader import SNLILoader
+from libs.data_loaders.MNLILoader import MNLILoader
 
 # todo make the registry dynamic based on the file name
 
 reg = {
     'IMDB': ImdbLoader,
-    'SNLI': SNLILoader
+    'SNLI': SNLILoader,
+    'MNLI': MNLILoader
 }
 
 
