@@ -226,6 +226,10 @@ When grouped by the rnn hidden size hyperparameter, the model efficacy was not v
 \justify
 Dropout changes did significantly improve results with lower dropout rates. Drop out is effectively regularizing the network to decrease the chance of overfitting. Lower dropout rates that perform better suggests that we are not training enough before early stopping. 
 
+\par 
+\justify
+In each of the various models, the total number of parameters can be computed by iterating through the model parameters that requires gradients (everything except the frozen embedding layer). In the chosen RNN model, this count was 281603, the others in the grid search was different due to the hidden dimension difference that required less or more params in that part of the graph.
+
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.7]{rnn_params}
@@ -254,6 +258,10 @@ Similar to RNNs, a basic grid search was performed for CNNs over the following p
 \justify
 When grouped by the cnn hidden size hyperparameter, the model looks to be performing better for larger hidden size, see Figure \ref{fig:cnnparams}. At the same time, lower kernal sizes were associated with better performance. The hidden size pattern can suggest that the CNNs need more hidden size to encode the necessary information in the input sentences. While the kernal size pattern suggests either that the information is more concentrated at the 3-gram level than larger n-gram levels, or we're not training our larger kernal sizes enough for them to converge properly.
 
+\par 
+\justify
+Same as the RNN, the total number of parameters can be computed by iterating through the model parameters that requires gradients (everything except the frozen embedding layer). In the chosen CNN model, this count was 340803, 
+
 
 \begin{figure}[h]
     \centering
@@ -263,7 +271,7 @@ When grouped by the cnn hidden size hyperparameter, the model looks to be perfor
 \end{figure}
 
 \section{MNLI Tuning}
-The results for running the best RNN and the best CNN against the MNLI validation set was shown at the very top in Table \ref{tbl:mnliresults}. To further tune each genre, which had a much smaller training set, the best RNN model state\_dict was first loaded. The batch size reduced to just 32 and learning rate cut in half at the ending epoch for the previous training (recall that we use a scheduler too that decays the learning rate). Starting from the SNLI trained model, an additional 5 epochs were added to the training loop and the MNLI training set for that genre was fed to the training loop to do fine tuning. The subsequent training curve for 'fiction' is shown below in Figure \ref{fig:fictioncurve}, with the other genres similar in content. The training accuracies all improved over the additional 5 epochs and the validation accuracies capped out at a rate that was better than the SNLI trained model but worse than the training accuracy. The post MNLI tuning model at the highest validation accuracy was reported.
+The results for running the best RNN and the best CNN against the MNLI validation set was shown at the very top in Table \ref{tbl:mnliresults}. We can see that the validation accuracies are less for each category compared to SNLI. To further tune each genre, which had a much smaller training set, the best RNN model state\_dict was first loaded. The batch size reduced to just 32 and learning rate cut in half at the ending epoch for the previous training (recall that we use a scheduler too that decays the learning rate). Starting from the SNLI trained model, an additional 5 epochs were added to the training loop and the MNLI training set for that genre was fed to the training loop to do fine tuning. The subsequent training curve for 'fiction' is shown below in Figure \ref{fig:fictioncurve}, with the other genres similar in content. The training accuracies all improved over the additional 5 epochs and the validation accuracies capped out at a rate that was better than the SNLI trained model but worse than the training accuracy. The post MNLI tuning model at the highest validation accuracy was reported.
 
 \par
 \justify
